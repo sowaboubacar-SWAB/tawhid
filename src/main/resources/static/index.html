@@ -32,17 +32,23 @@
     </div>
     <!-- Lecteur Audio Caché (YouTube API) -->
     <div id="player-container" class="player-hidden">
-        <div id="youtube-player"></div>
-        <div class="player-controls">
-            <div class="progress-container" style="width: 100%; display: flex; align-items: center; gap: 10px; padding: 0 20px; margin-bottom: 10px;">
-                <span id="current-time" style="font-size: 12px; color: #888;">0:00</span>
-                <input type="range" id="progress-bar" min="0" max="100" value="0" step="0.1" style="flex: 1; cursor: pointer;">
-                <span id="total-time" style="font-size: 12px; color: #888;">0:00</span>
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div id="youtube-player"></div> <!-- Le lecteur vidéo (réduit) -->
+                <div>
+                    <h4 id="now-playing" style="margin: 0; color: #4CAF50;">Aucune musique</h4>
+                    <div class="progress-container" style="width: 100%; display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                        <span id="current-time" style="font-size: 12px; color: #888;">0:00</span>
+                        <input type="range" id="progress-bar" min="0" max="100" value="0" step="0.1" style="width: 150px; cursor: pointer;">
+                        <span id="total-time" style="font-size: 12px; color: #888;">0:00</span>
+                    </div>
+                </div>
             </div>
-            <span id="now-playing">Aucune musique en cours</span>
-            <button onclick="playPrevious()">⏮️</button>
-            <button id="play-pause-btn" onclick="togglePlay()">▶️</button>
-            <button onclick="playNext()">⏭️</button>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="playPrevious()" style="background: transparent; border: 1px solid #4CAF50; color: #4CAF50;">⏮️</button>
+                <button id="play-pause-btn" onclick="togglePlay()" style="background: #4CAF50;">▶️</button>
+                <button onclick="playNext()" style="background: transparent; border: 1px solid #4CAF50; color: #4CAF50;">⏭️</button>
+            </div>
         </div>
     </div>
 </div>

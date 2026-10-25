@@ -178,3 +178,55 @@ header h1 { font-size: 24px; margin: 0; }
     max-height: 400px; /* Hauteur max de la liste */
     overflow-y: auto; /* Barre de scroll interne */
 }
+
+/* --- RESPONSIVE POUR MOBILE --- */
+@media (max-width: 768px) {
+    .app-container {
+        padding: 10px;
+    }
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    header h1 { font-size: 20px; }
+    .user-info {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .grid {
+        grid-template-columns: 1fr; /* Une seule colonne sur mobile */
+        gap: 15px;
+    }
+    .playlist-card { padding: 15px; }
+
+    /* Ajustement pour le lecteur en bas */
+    .player-controls {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .player-controls button {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+}
+
+/* --- LECTEUR FIXE EN BAS (Style Spotify) --- */
+.player-hidden {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #1a1a2e;
+    padding: 10px 15px;
+    border-top: 2px solid #4CAF50;
+    z-index: 1000;
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+}
+
+/* Pour que la liste des vidéos ne soit pas cachée par le lecteur */
+#video-list-container {
+    margin-bottom: 200px; /* Laisse de la place pour le lecteur */
+}

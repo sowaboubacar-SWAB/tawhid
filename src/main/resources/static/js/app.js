@@ -112,8 +112,8 @@ async function chargerVideos(playlistId, playlistTitle) {
 // Cette fonction est appelée automatiquement par l'API YouTube
 function onYouTubeIframeAPIReady() {
     ytPlayer = new YT.Player('youtube-player', {
-        height: '200',  // <-- Change 1 en 200
-        width: '300',   // <-- Change 1 en 300
+        height: '10',  // <-- Change 1 en 200
+        width: '25',   // <-- Change 1 en 300
         videoId: '',
         playerVars: {
             'autoplay': 0,
