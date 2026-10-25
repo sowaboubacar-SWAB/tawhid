@@ -140,6 +140,29 @@ function onPlayerStateChange(event) {
     }
 }
 
+// --- SCREEN WAKE LOCK (Empêche l'écran de s'éteindre tout seul) ---
+let wakeLock = null;
+
+async function requestWakeLock() {
+    if ('wakeLock' in navigator) {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log('Wake Lock activé');
+        } catch (err) {
+            console.log('Wake Lock non disponible:', err.message);
+        }
+    }
+}
+
+function releaseWakeLock() {
+    if (wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+    }
+}
+
+
+
 function lancerVideo(videoId, titre) {
     if (ytPlayer && ytPlayer.loadVideoById) {
         ytPlayer.loadVideoById(videoId);
@@ -148,6 +171,10 @@ function lancerVideo(videoId, titre) {
         document.getElementById('current-time').textContent = '0:00';
         isPlaying = true;
         document.getElementById('play-pause-btn').textContent = '⏸️';
+
+        // Met à jour l'écran de verrouillage
+        updateMediaSession(titre);
+        requestWakeLock();
     }
 }
 function togglePlay() {
@@ -221,6 +248,35 @@ document.getElementById('progress-bar')?.addEventListener('input', function() {
 
 // Lancer une boucle pour mettre à jour la barre toutes les secondes
 setInterval(updateProgressBar, 1000);
+
+// --- MEDIA SESSION API (Contrôles sur l'écran de verrouillage) ---
+function updateMediaSession(titre) {
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: titre,
+            artist: 'Tawhid',
+            album: 'Zikr Layenes'
+        });
+
+        // Boutons sur l'écran de verrouillage
+        navigator.mediaSession.setActionHandler('play', () => {
+            if (ytPlayer && ytPlayer.playVideo) {
+                ytPlayer.playVideo();
+                document.getElementById('play-pause-btn').textContent = '⏸️';
+                isPlaying = true;
+            }
+        });
+        navigator.mediaSession.setActionHandler('pause', () => {
+            if (ytPlayer && ytPlayer.pauseVideo) {
+                ytPlayer.pauseVideo();
+                document.getElementById('play-pause-btn').textContent = '▶️';
+                isPlaying = false;
+            }
+        });
+        navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious());
+        navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
+    }
+}
 // --- DÉCONNEXION ---
 function logout() {
     localStorage.removeItem('token');
