@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tawhid - Mes Playlists</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-container">
+    <!-- Header -->
+    <header>
+        <h1>🎵 Tawhid</h1>
+        <div class="user-info">
+            <span id="welcome-msg">Dalal Ak Jamm Laye</span>
+            <!-- Ajout du bouton Admin ici -->
+            <button id="admin-btn" onclick="window.location.href='/admin.html'" style="display: none; background: #ff9800; width: auto; padding: 8px 15px; font-size: 14px;">⚙️ Administration</button>
+            <button onclick="logout()" class="logout-btn">Déconnexion</button>
+        </div>
+    </header>
+    <!-- Section des playlists -->
+    <main>
+        <h2>Mes Playlists</h2>
+        <div id="playlists-container" class="grid">
+            <!-- Les playlists seront injectées ici par JavaScript -->
+        </div>
+    </main>
+    <!-- Liste des vidéos de la playlist sélectionnée -->
+    <div id="video-list-container" style="display: none; margin-top: 20px; background: #2a2a40; padding: 15px; border-radius: 10px;">
+        <h3 id="current-playlist-title" style="color: #4CAF50; margin-bottom: 10px;">Vidéos</h3>
+        <ul id="video-list" style="list-style: none; padding: 0;"></ul>
+    </div>
+    <!-- Lecteur Audio Caché (YouTube API) -->
+    <div id="player-container" class="player-hidden">
+        <div id="youtube-player"></div>
+        <div class="player-controls">
+            <div class="progress-container" style="width: 100%; display: flex; align-items: center; gap: 10px; padding: 0 20px; margin-bottom: 10px;">
+                <span id="current-time" style="font-size: 12px; color: #888;">0:00</span>
+                <input type="range" id="progress-bar" min="0" max="100" value="0" step="0.1" style="flex: 1; cursor: pointer;">
+                <span id="total-time" style="font-size: 12px; color: #888;">0:00</span>
+            </div>
+            <span id="now-playing">Aucune musique en cours</span>
+            <button onclick="playPrevious()">⏮️</button>
+            <button id="play-pause-btn" onclick="togglePlay()">▶️</button>
+            <button onclick="playNext()">⏭️</button>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>

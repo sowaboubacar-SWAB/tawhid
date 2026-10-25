@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tawhid - Administration</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-container">
+    <header>
+        <h1>⚙️ Administration</h1>
+        <div class="user-info">
+            <button onclick="window.location.href='/index.html'" style="background: #555; width: auto; padding: 8px 15px; font-size: 14px;">Retour</button>
+            <button onclick="logout()" class="logout-btn">Déconnexion</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Formulaire de création de playlist -->
+        <section class="admin-section">
+            <h2>Créer une nouvelle playlist</h2>
+            <input type="text" id="new-playlist-title" placeholder="Titre de la playlist">
+            <input type="text" id="new-playlist-desc" placeholder="Description (optionnel)">
+            <button onclick="creerPlaylist()">Créer la playlist</button>
+        </section>
+
+        <!-- Formulaire d'ajout de vidéo -->
+        <section class="admin-section">
+            <h2>Ajouter une vidéo à une playlist</h2>
+            <select id="playlist-select"></select>
+            <input type="text" id="new-video-title" placeholder="Titre de la vidéo">
+            <input type="text" id="new-video-youtube-id" placeholder="ID YouTube (ex: dQw4w9WgXcQ)">
+            <button onclick="ajouterVideo()">Ajouter la vidéo</button>
+        </section>
+        <!-- Section de gestion des vidéos existantes -->
+        <section class="admin-section">
+            <h2>Gérer les vidéos existantes</h2>
+            <select id="playlist-select-manage" onchange="chargerVideosAdmin()">
+                <option value="">Sélectionnez une playlist</option>
+            </select>
+            <div id="admin-video-list" style="margin-top: 15px;">
+                <!-- La liste des vidéos avec les boutons supprimer s'affichera ici -->
+            </div>
+        </section>
+        <section class="admin-section">
+            <h2>Importer depuis YouTube</h2>
+            <button onclick="importerPlaylistYouTube()">Importer une playlist YouTube</button>
+            <div id="imported-videos-container" style="margin-top: 15px;"></div>
+            <button id="import-btn-confirm" onclick="confirmerImportation()" style="display: none; background: #4CAF50; margin-top: 10px;">Ajouter les vidéos sélectionnées</button>
+        </section>
+    </main>
+</div>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>
