@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tawhid - Inscription</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/register.js" defer></script>
+
+</head>
+<body>
+<div class="container">
+    <h1>🎵 Tawhid</h1>
+    <p class="subtitle">Créer un compte</p>
+
+    <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+    <input type="password" id="password" placeholder="Mot de passe" required>
+    <input type="password" id="confirm-password" placeholder="Confirmer le mot de passe" required>
+    <button onclick="register()">S'inscrire</button>
+    <div id="error" class="error"></div>
+
+    <div class="register-link">
+        Déjà un compte ? <a href="/login.html">Se connecter</a>
+    </div>
+</div>
+
+</body>
+</html>

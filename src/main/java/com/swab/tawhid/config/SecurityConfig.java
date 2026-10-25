@@ -32,7 +32,7 @@ public class SecurityConfig {
                         // Routes publiques
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/", "/index.html", "/login.html", "/admin.html", "/css/**", "/js/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/", "/index.html","/register.html", "/login.html", "/admin.html", "/css/**", "/js/**", "/favicon.ico").permitAll()
                         .requestMatchers("/error").permitAll()
 
                         // Lecture : tout le monde peut voir les playlists et vidéos
