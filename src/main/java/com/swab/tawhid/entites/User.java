@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users")
 @Data
@@ -28,4 +30,5 @@ public class User {
     @Column(nullable = false)
     private String role = "ROLE_USER";
 
+    private LocalDateTime dateInscription = LocalDateTime.now();
 }

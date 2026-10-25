@@ -189,6 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     chargerPlaylistsSelect();
+    chargerPlaylistsSelectManage();
+    chargerUtilisateurs(); // <-- Nouvelle ligne
 });
 
 function logout() {
@@ -281,3 +283,80 @@ document.addEventListener('DOMContentLoaded', () => {
     chargerPlaylistsSelect();
     chargerPlaylistsSelectManage(); // <-- Nouvelle ligne
 });
+
+// --- GESTION DES UTILISATEURS ---
+async function chargerUtilisateurs() {
+    const container = document.getElementById('users-list');
+    container.innerHTML = '<p>Chargement...</p>';
+
+    try {
+        const response = await fetch('/api/users', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Erreur de chargement');
+
+        const users = await response.json();
+        container.innerHTML = '';
+
+        if (users.length === 0) {
+            container.innerHTML = '<p>Aucun utilisateur inscrit.</p>';
+            return;
+        }
+
+        // Créer un tableau
+        const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+        table.innerHTML = `
+            <thead>
+                <tr style="border-bottom: 2px solid #4CAF50; text-align: left;">
+                    <th style="padding: 8px;">ID</th>
+                    <th style="padding: 8px;">Nom d'utilisateur</th>
+                    <th style="padding: 8px;">Rôle</th>
+                    <th style="padding: 8px;">Date d'inscription</th>
+                    <th style="padding: 8px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${users.map(u => `
+                    <tr style="border-bottom: 1px solid #444;">
+                        <td style="padding: 8px;">${u.id}</td>
+                        <td style="padding: 8px;">${u.username}</td>
+                        <td style="padding: 8px;">${u.role === 'ROLE_ADMIN' ? '👑 Admin' : '👤 User'}</td>
+                        <td style="padding: 8px;">${u.dateInscription ? new Date(u.dateInscription).toLocaleString() : 'N/A'}</td>
+                        <td style="padding: 8px;">
+                            <button onclick="supprimerUtilisateur(${u.id})" style="background: #ff4444; width: auto; padding: 5px 10px; font-size: 12px;">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        `;
+        container.appendChild(table);
+
+    } catch (error) {
+        console.error(error);
+        container.innerHTML = '<p style="color: #ff6b6b;">Erreur lors du chargement des utilisateurs.</p>';
+    }
+}
+
+async function supprimerUtilisateur(id) {
+    if (!confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) return;
+
+    try {
+        const response = await fetch(`/api/users/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            alert('Utilisateur supprimé !');
+            chargerUtilisateurs();
+        } else {
+            alert('Erreur lors de la suppression (êtes-vous admin ?)');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Erreur réseau');
+    }
+}

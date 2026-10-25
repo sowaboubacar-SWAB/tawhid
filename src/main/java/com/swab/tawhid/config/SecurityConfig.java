@@ -38,7 +38,7 @@ public class SecurityConfig {
                         // Lecture : tout le monde peut voir les playlists et vidéos
                         .requestMatchers(HttpMethod.GET, "/api/playlists/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/videos/**").permitAll()
-
+                        .requestMatchers("/api/user/**").hasRole("ADMIN")
                         // Écriture (POST, DELETE) : Réservé aux ADMIN
                         .requestMatchers(HttpMethod.POST, "/api/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
