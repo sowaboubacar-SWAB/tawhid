@@ -494,7 +494,6 @@ function isUserAdmin() {
         return false;
     }
 }
-
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
