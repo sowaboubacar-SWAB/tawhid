@@ -35,10 +35,11 @@ public class SecurityConfig {
                         .requestMatchers("/", "/index.html","/register.html", "/login.html", "/admin.html", "/css/**", "/js/**", "/favicon.ico").permitAll()
                         .requestMatchers("/error").permitAll()
 
-                        // Lecture : tout le monde peut voir les playlists et vidéos
+                        // Lecture : tout le monde peut voir les playlists et vidéos et audios
                         .requestMatchers(HttpMethod.GET, "/api/playlists/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/videos/**").permitAll()
-                        .requestMatchers("/api/user/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/files/**").permitAll()
+                        .requestMatchers("/api/user/**").permitAll()
                         // Écriture (POST, DELETE) : Réservé aux ADMIN
                         .requestMatchers(HttpMethod.POST, "/api/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")

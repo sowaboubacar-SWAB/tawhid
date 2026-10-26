@@ -5,55 +5,127 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tawhid - Mes Playlists</title>
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/player.css">
 </head>
 <body>
-<div class="app-container">
+<div class="app-layout">
     <!-- Header -->
-    <header>
+    <header class="top-bar">
         <h1>🎵 Tawhid</h1>
         <div class="user-info">
-            <span id="welcome-msg">Dalal Ak Jamm Laye</span>
-            <!-- Ajout du bouton Admin ici -->
-            <button id="admin-btn" onclick="window.location.href='/admin.html'" style="display: none; background: #ff9800; width: auto; padding: 8px 15px; font-size: 14px;">⚙️ Administration</button>
-            <button onclick="logout()" class="logout-btn">Déconnexion</button>
+            <span id="welcome-msg">Dalal ak jamm</span>
+            <button id="admin-btn" onclick="window.location.href='/admin.html'" class="btn-admin">⚙️ Admin</button>
+            <button onclick="logout()" class="btn-logout">Déconnexion</button>
         </div>
     </header>
-    <!-- Section des playlists -->
-    <main>
-        <h2>Mes Playlists</h2>
-        <div id="playlists-container" class="grid">
-            <!-- Les playlists seront injectées ici par JavaScript -->
-        </div>
-    </main>
-    <!-- Liste des vidéos de la playlist sélectionnée -->
-    <div id="video-list-container" style="display: none; margin-top: 20px; background: #2a2a40; padding: 15px; border-radius: 10px;">
-        <h3 id="current-playlist-title" style="color: #4CAF50; margin-bottom: 10px;">Vidéos</h3>
-        <ul id="video-list" style="list-style: none; padding: 0;"></ul>
-    </div>
-    <!-- Lecteur Audio Caché (YouTube API) -->
-    <div id="player-container" class="player-hidden">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <div id="youtube-player"></div> <!-- Le lecteur vidéo (réduit) -->
-                <div>
-                    <h4 id="now-playing" style="margin: 0; color: #4CAF50;">Aucune musique</h4>
-                    <div class="progress-container" style="width: 100%; display: flex; align-items: center; gap: 10px; margin-top: 5px;">
-                        <span id="current-time" style="font-size: 12px; color: #888;">0:00</span>
-                        <input type="range" id="progress-bar" min="0" max="100" value="0" step="0.1" style="width: 150px; cursor: pointer;">
-                        <span id="total-time" style="font-size: 12px; color: #888;">0:00</span>
-                    </div>
+
+    <!-- Contenu principal -->
+    <main class="main-content">
+        <!-- Vue Playlists -->
+        <section id="playlists-view">
+            <h2 class="section-title">Mes Playlists</h2>
+            <div id="playlists-container" class="playlists-grid"></div>
+        </section>
+
+        <!-- Vue Détail d'une Playlist -->
+        <section id="playlist-detail-view" style="display: none;">
+            <button class="btn-back" onclick="retourAccueil()">← Retour aux playlists</button>
+            <div class="playlist-header">
+                <div class="playlist-cover">🎵</div>
+                <div class="playlist-info">
+                    <h2 id="detail-playlist-title">Titre</h2>
+                    <p id="detail-playlist-desc">Description</p>
                 </div>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button onclick="playPrevious()" style="background: transparent; border: 1px solid #4CAF50; color: #4CAF50;">⏮️</button>
-                <button id="play-pause-btn" onclick="togglePlay()" style="background: #4CAF50;">▶️</button>
-                <button onclick="playNext()" style="background: transparent; border: 1px solid #4CAF50; color: #4CAF50;">⏭️</button>
+
+            <div id="videos-section" class="tracks-section">
+                <h3>🎬 Vidéos YouTube</h3>
+                <ul id="video-list" class="track-list"></ul>
             </div>
+
+            <div id="audios-section" class="tracks-section">
+                <h3>🎧 Mes Audios</h3>
+                <ul id="audio-list" class="track-list"></ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- Barre de lecture fixe en bas -->
+    <div id="player-container" class="player-bar" onclick="openFullscreenPlayer(event)">
+        <!-- Lecteurs cachés -->
+        <div id="youtube-player" style="position: absolute; width: 200px; height: 200px; opacity: 0; pointer-events: none; top: -9999px;"></div>
+        <audio id="html-audio-player" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;"></audio>
+
+        <!-- Partie gauche : Infos -->
+        <div class="player-left">
+            <div class="now-playing-info">
+                <h4 id="now-playing-title">Aucune musique</h4>
+                <p id="now-playing-artist" style="color: #888; font-size: 12px;">Sélectionnez une piste</p>
+            </div>
+        </div>
+
+        <!-- Partie centrale : Contrôles -->
+        <div class="player-center">
+            <div class="player-controls">
+                <button onclick="playPrevious()">⏮️</button>
+                <button id="play-pause-btn" onclick="togglePlay()" class="btn-play">▶️</button>
+                <button onclick="playNext()">⏭️</button>
+            </div>
+            <div class="progress-container">
+                <span id="current-time">0:00</span>
+                <input type="range" id="progress-bar" min="0" max="100" value="0" step="0.1">
+                <span id="total-time">0:00</span>
+            </div>
+        </div>
+
+        <!-- Partie droite -->
+        <div class="player-right">
+            <span style="color: #1DB954; font-size: 24px;">🎵</span>
+        </div>
+    </div>
+
+    <!-- Vue plein écran du lecteur -->
+    <div id="fullscreen-player">
+        <div class="fs-header">
+            <button onclick="closeFullscreenPlayer()">⬇️</button>
+            <span>En cours de lecture</span>
+            <div style="width: 24px;"></div>
+        </div>
+
+        <!-- NOUVELLE DIV : Partie haute (compacte) -->
+        <div class="fs-top-section">
+            <div class="fs-cover">🎵</div>
+
+            <div class="fs-info">
+                <h2 id="fs-title">Titre</h2>
+                <p id="fs-artist">Artiste</p>
+            </div>
+
+            <div class="fs-progress">
+                <input type="range" id="fs-progress-bar" min="0" max="100" value="0" step="0.1">
+                <div class="fs-times">
+                    <span id="fs-current-time">0:00</span>
+                    <span id="fs-total-time">0:00</span>
+                </div>
+            </div>
+
+            <div class="fs-controls">
+                <button onclick="toggleShuffle()" id="shuffle-btn" class="fs-btn-secondary">🔀</button>
+                <button onclick="playPrevious()">⏮️</button>
+                <button id="fs-play-pause-btn" onclick="togglePlay()" class="fs-btn-play">▶️</button>
+                <button onclick="playNext()">⏭️</button>
+                <button onclick="toggleLoop()" id="loop-btn" class="fs-btn-secondary">🔁</button>
+            </div>
+        </div>
+
+        <!-- File d'attente (prend le reste de l'espace) -->
+        <div class="fs-queue">
+            <h3>File d'attente</h3>
+            <ul id="fs-track-list"></ul>
         </div>
     </div>
 </div>
 
-<!-- Scripts -->
 <script src="https://www.youtube.com/iframe_api"></script>
 <script src="/js/app.js"></script>
 </body>

@@ -17,45 +17,63 @@
     </header>
 
     <main>
-        <!-- Formulaire de création de playlist -->
+        <!-- Section 1 : Gestion des Playlists -->
         <section class="admin-section">
-            <h2>Créer une nouvelle playlist</h2>
+            <h2>📁 Gestion des Playlists</h2>
             <input type="text" id="new-playlist-title" placeholder="Titre de la playlist">
             <input type="text" id="new-playlist-desc" placeholder="Description (optionnel)">
             <button onclick="creerPlaylist()">Créer la playlist</button>
         </section>
 
-        <!-- Formulaire d'ajout de vidéo -->
+        <!-- Section 2 : Vidéos YouTube -->
         <section class="admin-section">
-            <h2>Ajouter une vidéo à une playlist</h2>
-            <select id="playlist-select"></select>
+            <h2>🎬 Vidéos YouTube</h2>
+            <p style="color: #888; font-size: 14px; margin-bottom: 15px;">Ajoutez des vidéos via leur ID YouTube ou importez une playlist complète.</p>
+
+            <select id="playlist-select">
+                <option value="">Sélectionnez une playlist</option>
+            </select>
+
             <input type="text" id="new-video-title" placeholder="Titre de la vidéo">
             <input type="text" id="new-video-youtube-id" placeholder="ID YouTube (ex: dQw4w9WgXcQ)">
             <button onclick="ajouterVideo()">Ajouter la vidéo</button>
-        </section>
-        <!-- Section de gestion des vidéos existantes -->
-        <section class="admin-section">
-            <h2>Gérer les vidéos existantes</h2>
-            <select id="playlist-select-manage" onchange="chargerVideosAdmin()">
-                <option value="">Sélectionnez une playlist</option>
-            </select>
-            <div id="admin-video-list" style="margin-top: 15px;">
-                <!-- La liste des vidéos avec les boutons supprimer s'affichera ici -->
-            </div>
-        </section>
-        <section class="admin-section">
-            <h2>Importer depuis YouTube</h2>
-            <button onclick="importerPlaylistYouTube()">Importer une playlist YouTube</button>
+
+            <hr style="border-color: #282828; margin: 20px 0;">
+
+            <button onclick="importerPlaylistYouTube()" style="background: #ff9800;">📥 Importer une playlist YouTube</button>
             <div id="imported-videos-container" style="margin-top: 15px;"></div>
             <button id="import-btn-confirm" onclick="confirmerImportation()" style="display: none; background: #4CAF50; margin-top: 10px;">Ajouter les vidéos sélectionnées</button>
         </section>
-        <!-- Section de gestion des utilisateurs -->
+
+        <!-- Section 3 : Audios Natifs (Multi-upload) -->
+        <section class="admin-section">
+            <h2>🎧 Mes Audios (MP3)</h2>
+            <p style="color: #888; font-size: 14px; margin-bottom: 15px;">Uploadez un ou plusieurs fichiers MP3 en une seule fois.</p>
+
+            <select id="audio-playlist-select">
+                <option value="">Sélectionnez une playlist</option>
+            </select>
+
+            <input type="text" id="audio-title" placeholder="Titre de base (ex: Zikr du matin)">
+            <input type="text" id="audio-artist" placeholder="Artiste (optionnel)">
+            <input type="file" id="audio-file" accept="audio/*" multiple>
+            <button onclick="uploadAudio()">Uploader le(s) audio(s)</button>
+        </section>
+
+        <!-- Section 4 : Gestion des vidéos existantes -->
+        <section class="admin-section">
+            <h2>🗑️ Gérer les vidéos existantes</h2>
+            <select id="playlist-select-manage" onchange="chargerVideosAdmin()">
+                <option value="">Sélectionnez une playlist</option>
+            </select>
+            <div id="admin-video-list" style="margin-top: 15px;"></div>
+        </section>
+
+        <!-- Section 5 : Utilisateurs -->
         <section class="admin-section">
             <h2>👥 Utilisateurs inscrits</h2>
             <button onclick="chargerUtilisateurs()" style="margin-bottom: 15px;">Rafraîchir la liste</button>
-            <div id="users-list" style="margin-top: 15px;">
-                <!-- La liste des utilisateurs s'affichera ici -->
-            </div>
+            <div id="users-list" style="margin-top: 15px;"></div>
         </section>
     </main>
 </div>
