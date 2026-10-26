@@ -28,7 +28,7 @@ public class FileController {
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFiles(
             @RequestParam("files") MultipartFile[] files,
-            @RequestParam("titre") String titre,
+            @RequestParam(value = "titre", required = false) String titre,
             @RequestParam(value = "artiste", required = false) String artiste,
             @RequestParam("playlistId") Long playlistId) {
         try {
@@ -38,21 +38,38 @@ public class FileController {
             }
 
             int count = 0;
-            // On boucle sur chaque fichier
             for (MultipartFile file : files) {
                 if (file.isEmpty()) continue;
 
                 String originalFilename = file.getOriginalFilename();
-                String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-                String newFilename = UUID.randomUUID().toString() + extension;
+                if (originalFilename == null) continue;
 
+                // Extraire l'extension
+                String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+
+                // --- NOUVEAU : Extraire le nom sans l'extension ---
+                String titreFichier = originalFilename.substring(0, originalFilename.lastIndexOf("."));
+
+                // Remplacer les underscores ou tirets par des espaces (optionnel, pour faire plus propre)
+                titreFichier = titreFichier.replace("_", " ");
+
+                // Générer le nouveau nom unique pour le stockage
+                String newFilename = UUID.randomUUID().toString() + extension;
                 Path filePath = uploadPath.resolve(newFilename);
                 Files.copy(file.getInputStream(), filePath);
 
                 // Créer l'objet Audio
                 Audio audio = new Audio();
-                // Si plusieurs fichiers, on ajoute un numéro au titre
-                audio.setTitre(files.length > 1 ? titre + " - " + (count + 1) : titre);
+
+                // --- NOUVEAU : Si le champ "titre" est vide, on utilise le nom du fichier ---
+                if (titre == null || titre.trim().isEmpty()) {
+                    audio.setTitre(titreFichier);
+                } else {
+                    // Si l'utilisateur a mis un titre, on l'utilise (pour un seul fichier)
+                    // ou on ajoute un numéro (pour plusieurs fichiers)
+                    audio.setTitre(files.length > 1 ? titre + " - " + titreFichier : titre);
+                }
+
                 audio.setArtiste(artiste);
                 audio.setUrlFichier(newFilename);
 

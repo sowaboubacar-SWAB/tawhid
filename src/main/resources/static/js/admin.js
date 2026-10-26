@@ -91,24 +91,26 @@ async function chargerPlaylistsSelectUpload() {
         playlists.forEach(p => select.innerHTML += `<option value="${p.id}">${p.titre}</option>`);
     } catch (e) { console.error(e); }
 }
-
 async function uploadAudio() {
     const playlistId = document.getElementById('audio-playlist-select').value;
-    const titre = document.getElementById('audio-title').value;
+    const titre = document.getElementById('audio-title').value; // Peut être vide
     const artiste = document.getElementById('audio-artist').value;
     const fileInput = document.getElementById('audio-file');
 
-    if (!playlistId || !titre || fileInput.files.length === 0) {
-        alert('Playlist, titre et au moins un fichier sont obligatoires.');
+    if (!playlistId || fileInput.files.length === 0) {
+        alert('Playlist et au moins un fichier sont obligatoires.');
         return;
     }
 
     const formData = new FormData();
-    // On ajoute TOUS les fichiers sélectionnés
     for (let i = 0; i < fileInput.files.length; i++) {
         formData.append('files', fileInput.files[i]);
     }
-    formData.append('titre', titre);
+
+    // On ajoute le titre seulement s'il est rempli
+    if (titre.trim() !== '') {
+        formData.append('titre', titre);
+    }
     formData.append('artiste', artiste);
     formData.append('playlistId', playlistId);
 
@@ -130,7 +132,7 @@ async function uploadAudio() {
 
     } catch (error) {
         console.error(error);
-        alert('Erreur lors de l\'upload. Vérifie la taille du fichier et tes droits admin.');
+        alert('Erreur lors de l\'upload.');
     }
 }
 
