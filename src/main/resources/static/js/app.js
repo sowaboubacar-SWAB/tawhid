@@ -255,7 +255,7 @@ function lancerAudio(filename, titre, artiste) {
     }
 
     const audioPlayer = document.getElementById('html-audio-player');
-    audioPlayer.src = `/api/files/${filename}`;
+    audioPlayer.src = `https://pub-3593d5d19c3f4660a2c22108b3c7512c.r2.dev/${filename}`;
     audioPlayer.load();
     audioPlayer.play().catch(e => console.error("Erreur lecture audio:", e));
 
