@@ -17,8 +17,8 @@ import java.util.UUID;
 public class R2Service {
 
     // ⚠️ REMPLACE CES VALEURS PAR TES VRAIES CLÉS CLOUDFLARE
-    private final String accessKey = "TON_ACCESS_KEY_ID";
-    private final String secretKey = "TON_SECRET_ACCESS_KEY";
+    private final String accessKey = "8fc29765d16b8313554a700e243efeed";
+    private final String secretKey = "599764933517f3eab11985a5c00b5b450f7ed3e6631b0b984e1c76cfe3c36116";
     private final String endpoint = "https://TON_ID_COMPTE.r2.cloudflarestorage.com";
     private final String bucketName = "tawhid-audio";
 
