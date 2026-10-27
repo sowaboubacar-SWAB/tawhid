@@ -225,11 +225,22 @@ async function chargerAudiosAdmin() {
             return;
         }
 
+        const toolbar = document.createElement('div');
+        toolbar.style.marginBottom = '10px';
+        toolbar.innerHTML = `
+            <label style="cursor: pointer; color: #fff; margin-right: 15px;">
+                <input type="checkbox" id="select-all-audios" onchange="toggleSelectAll('audios')"> Tout sélectionner
+            </label>
+            <button onclick="supprimerSelection('audios')" style="background: #ff4444; width: auto; padding: 5px 10px; font-size: 12px;">🗑️ Supprimer la sélection</button>
+        `;
+        container.appendChild(toolbar);
+
         audios.forEach(a => {
             const div = document.createElement('div');
-            div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #444;';
+            div.style.cssText = 'display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #444; gap: 10px;';
             div.innerHTML = `
-                <span><strong>${a.titre}</strong> - ${a.artiste || 'Artiste inconnu'}</span>
+                <input type="checkbox" class="audio-checkbox" value="${a.id}" style="width: auto;">
+                <span style="flex: 1;">${a.titre} - ${a.artiste || 'Artiste inconnu'}</span>
                 <button onclick="supprimerAudio(${a.id})" style="background: #ff4444; width: auto; padding: 5px 10px; font-size: 12px; margin: 0;">🗑️</button>
             `;
             container.appendChild(div);
@@ -279,16 +290,29 @@ async function chargerVideosAdmin() {
     try {
         const response = await fetch(`/api/videos/playlists/${playlistId}`, { headers: { 'Authorization': `Bearer ${token}` } });
         const videos = await response.json();
+
         container.innerHTML = '';
         if (videos.length === 0) {
             container.innerHTML = '<p>Aucune vidéo dans cette playlist.</p>';
             return;
         }
+
+        const toolbar = document.createElement('div');
+        toolbar.style.marginBottom = '10px';
+        toolbar.innerHTML = `
+            <label style="cursor: pointer; color: #fff; margin-right: 15px;">
+                <input type="checkbox" id="select-all-videos" onchange="toggleSelectAll('videos')"> Tout sélectionner
+            </label>
+            <button onclick="supprimerSelection('videos')" style="background: #ff4444; width: auto; padding: 5px 10px; font-size: 12px;">🗑️ Supprimer la sélection</button>
+        `;
+        container.appendChild(toolbar);
+
         videos.forEach(video => {
             const div = document.createElement('div');
-            div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #444;';
+            div.style.cssText = 'display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #444; gap: 10px;';
             div.innerHTML = `
-                <span>${video.titre} (${video.youtubeId})</span>
+                <input type="checkbox" class="video-checkbox" value="${video.id}" style="width: auto;">
+                <span style="flex: 1;">${video.titre} (${video.youtubeId})</span>
                 <button onclick="supprimerVideo(${video.id})" style="background: #ff4444; width: auto; padding: 5px 10px; font-size: 12px; margin: 0;">🗑️</button>
             `;
             container.appendChild(div);
@@ -428,7 +452,47 @@ async function confirmerImportation() {
 }
 
 // ==========================================
-// 7. DÉCONNEXION
+// 7. SÉLECTION MULTIPLE & SUPPRESSION GROUPÉE
+// ==========================================
+function toggleSelectAll(type) {
+    const checkboxes = document.querySelectorAll(`.${type}-checkbox`);
+    const selectAllCheckbox = document.getElementById(`select-all-${type}`);
+    checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+}
+
+async function supprimerSelection(type) {
+    const checkboxes = document.querySelectorAll(`.${type}-checkbox:checked`);
+    if (checkboxes.length === 0) {
+        alert('Veuillez sélectionner au moins un élément.');
+        return;
+    }
+
+    if (!confirm(`Voulez-vous vraiment supprimer les ${checkboxes.length} éléments sélectionnés ?`)) return;
+
+    let successCount = 0;
+    for (const cb of checkboxes) {
+        const id = cb.value;
+        const url = type === 'videos' ? `/api/videos/${id}` : `/api/audios/${id}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) successCount++;
+        } catch (e) {
+            console.error(`Erreur suppression ${id}:`, e);
+        }
+    }
+
+    alert(`${successCount} élément(s) supprimé(s) avec succès.`);
+
+    if (type === 'videos') chargerVideosAdmin();
+    else chargerAudiosAdmin();
+}
+
+// ==========================================
+// 8. DÉCONNEXION
 // ==========================================
 function logout() {
     localStorage.clear();
