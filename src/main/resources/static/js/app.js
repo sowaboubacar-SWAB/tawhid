@@ -2,12 +2,13 @@
 // VARIABLES GLOBALES
 // ==========================================
 let playlists = [];
-let currentPlaylistVideos = [];
-let currentVideoIndex = 0;
+let currentQueue = []; // La file d'attente unifiée (vidéos + audios)
+let currentQueueIndex = 0;
 let ytPlayer = null;
 let isPlaying = false;
 let currentToken = localStorage.getItem('token');
 let currentAudioPlayer = null; // 'youtube' ou 'audio'
+let currentMediaType = null; // 'video' ou 'audio' pour l'élément en cours
 let wakeLock = null;
 
 // Variables pour le lecteur plein écran
@@ -69,6 +70,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ytPlayer.seekTo(seekTo, true);
         }
     });
+
+    // Écouter la fin de lecture de l'audio natif
+    document.getElementById('html-audio-player')?.addEventListener('ended', () => {
+        handleMediaEnded();
+    });
 });
 
 // ==========================================
@@ -94,7 +100,7 @@ async function chargerPlaylists() {
         playlists.forEach(playlist => {
             const card = document.createElement('div');
             card.className = 'playlist-card';
-            card.onclick = () => chargerVideos(playlist.id, playlist.titre, playlist.description);
+            card.onclick = () => chargerPlaylistDetails(playlist.id, playlist.titre, playlist.description);
             card.innerHTML = `
                 <div class="cover">🎵</div>
                 <h3>${playlist.titre}</h3>
@@ -108,129 +114,122 @@ async function chargerPlaylists() {
 }
 
 // ==========================================
-// CHARGEMENT DES VIDÉOS ET AUDIOS D'UNE PLAYLIST
+// CHARGEMENT D'UNE PLAYLIST (FILE D'ATTENTE UNIFIÉE)
 // ==========================================
-async function chargerVideos(playlistId, playlistTitle, playlistDesc) {
+async function chargerPlaylistDetails(playlistId, playlistTitle, playlistDesc) {
     document.getElementById('playlists-view').style.display = 'none';
     document.getElementById('playlist-detail-view').style.display = 'block';
 
     document.getElementById('detail-playlist-title').textContent = playlistTitle;
     document.getElementById('detail-playlist-desc').textContent = playlistDesc || '';
 
+    // Vider les listes
+    const videoList = document.getElementById('video-list');
+    const audioList = document.getElementById('audio-list');
+    videoList.innerHTML = '';
+    audioList.innerHTML = '';
+
+    // Réinitialiser la file d'attente
+    currentQueue = [];
+    currentQueueIndex = 0;
+
     try {
-        const response = await fetch(`/api/videos/playlists/${playlistId}`, {
+        // 1. Charger les vidéos
+        const videoResponse = await fetch(`/api/videos/playlists/${playlistId}`, {
             headers: { 'Authorization': `Bearer ${currentToken}` }
         });
+        const videos = await videoResponse.json();
 
-        if (!response.ok) throw new Error('Erreur de chargement');
+        // 2. Charger les audios
+        const audioResponse = await fetch(`/api/audios/playlists/${playlistId}`, {
+            headers: { 'Authorization': `Bearer ${currentToken}` }
+        });
+        const audios = await audioResponse.json();
 
-        currentPlaylistVideos = await response.json();
-        const videoList = document.getElementById('video-list');
-        videoList.innerHTML = '';
+        // 3. Remplir la file d'attente (vidéos d'abord, puis audios)
+        videos.forEach(v => {
+            currentQueue.push({
+                type: 'video',
+                id: v.id,
+                titre: v.titre,
+                youtubeId: v.youtubeId
+            });
+        });
+        audios.forEach(a => {
+            currentQueue.push({
+                type: 'audio',
+                id: a.id,
+                titre: a.titre,
+                artiste: a.artiste,
+                urlFichier: a.urlFichier
+            });
+        });
 
-        if (currentPlaylistVideos.length === 0) {
+        // 4. Afficher les vidéos dans la section vidéo
+        if (videos.length === 0) {
             videoList.innerHTML = '<li style="color: #888;">Aucune vidéo dans cette playlist.</li>';
         } else {
-            currentPlaylistVideos.forEach((video, index) => {
+            videos.forEach(video => {
                 const li = document.createElement('li');
-                li.textContent = `${index + 1}. ${video.titre}`;
+                li.textContent = `${video.titre}`;
                 li.onclick = () => {
-                    currentVideoIndex = index;
-                    lancerVideo(video.youtubeId, video.titre);
+                    const index = currentQueue.findIndex(item => item.type === 'video' && item.id === video.id);
+                    lancerMedia(index);
                 };
                 videoList.appendChild(li);
             });
         }
 
-        chargerAudios(playlistId, playlistTitle);
+        // 5. Afficher les audios dans la section audio
+        if (audios.length === 0) {
+            document.getElementById('audios-section').style.display = 'none';
+        } else {
+            document.getElementById('audios-section').style.display = 'block';
+            audios.forEach(audio => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                        <span style="color: #1DB954; font-size: 20px;">▶</span>
+                        <div>
+                            <strong>${audio.titre}</strong><br>
+                            <small style="color: #b3b3b3;">${audio.artiste || 'Artiste inconnu'}</small>
+                        </div>
+                    </div>
+                `;
+                li.onclick = () => {
+                    const index = currentQueue.findIndex(item => item.type === 'audio' && item.id === audio.id);
+                    lancerMedia(index);
+                };
+                audioList.appendChild(li);
+            });
+        }
 
     } catch (error) {
         console.error("Erreur:", error);
     }
 }
 
-async function chargerAudios(playlistId, playlistTitle) {
-    try {
-        const response = await fetch(`/api/audios/playlists/${playlistId}`, {
-            headers: { 'Authorization': `Bearer ${currentToken}` }
-        });
+// ==========================================
+// LANCEMENT D'UN MÉDIA (VIDÉO OU AUDIO)
+// ==========================================
+function lancerMedia(index) {
+    if (index < 0 || index >= currentQueue.length) return;
 
-        if (!response.ok) throw new Error('Erreur de chargement des audios');
+    currentQueueIndex = index;
+    const media = currentQueue[index];
 
-        const audios = await response.json();
-        const list = document.getElementById('audio-list');
-        list.innerHTML = '';
-
-        if (audios.length === 0) {
-            document.getElementById('audios-section').style.display = 'none';
-            return;
-        }
-        document.getElementById('audios-section').style.display = 'block';
-
-        audios.forEach(audio => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                    <span style="color: #1DB954; font-size: 20px;">▶</span>
-                    <div>
-                        <strong>${audio.titre}</strong><br>
-                        <small style="color: #b3b3b3;">${audio.artiste || 'Artiste inconnu'}</small>
-                    </div>
-                </div>
-            `;
-            li.onclick = () => lancerAudio(audio.urlFichier, audio.titre, audio.artiste);
-            list.appendChild(li);
-        });
-
-    } catch (error) {
-        console.error(error);
+    if (media.type === 'video') {
+        lancerVideo(media.youtubeId, media.titre);
+    } else if (media.type === 'audio') {
+        lancerAudio(media.urlFichier, media.titre, media.artiste);
     }
 }
 
-// ==========================================
-// LECTEUR YOUTUBE
-// ==========================================
-function onYouTubeIframeAPIReady() {
-    ytPlayer = new YT.Player('youtube-player', {
-        height: '200',
-        width: '200',
-        videoId: '',
-        playerVars: {
-            'autoplay': 0,
-            'controls': 1,
-            'disablekb': 1,
-            'fs': 0,
-            'modestbranding': 1
-        },
-        events: {
-            'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange
-        }
-    });
-}
-
-function onPlayerReady(event) {
-    console.log("✅ Lecteur YouTube prêt !");
-}
-
-function onPlayerStateChange(event) {
-    if (event.data === YT.PlayerState.ENDED) {
-        if (loopMode === 2) {
-            lancerVideo(currentPlaylistVideos[currentVideoIndex].youtubeId, currentPlaylistVideos[currentVideoIndex].titre);
-        } else if (loopMode === 1 || currentVideoIndex < currentPlaylistVideos.length - 1) {
-            playNext();
-        }
-    }
-}
-
-// ==========================================
-// LANCEMENT DES MÉDIAS
-// ==========================================
 function lancerVideo(videoId, titre) {
-    // Arrêter l'audio s'il jouait
     const audioPlayer = document.getElementById('html-audio-player');
     if (audioPlayer) audioPlayer.pause();
     currentAudioPlayer = 'youtube';
+    currentMediaType = 'video';
 
     if (ytPlayer && ytPlayer.loadVideoById) {
         ytPlayer.loadVideoById(videoId);
@@ -243,20 +242,17 @@ function lancerVideo(videoId, titre) {
         updateMediaSession(titre);
         requestWakeLock();
     } else {
-        console.log("Lecteur YouTube pas prêt, nouvelle tentative dans 1s...");
         setTimeout(() => lancerVideo(videoId, titre), 1000);
     }
 }
 
 function lancerAudio(filename, titre, artiste) {
-    // Arrêter YouTube s'il jouait
     if (ytPlayer && ytPlayer.pauseVideo) {
         ytPlayer.pauseVideo();
     }
 
     const audioPlayer = document.getElementById('html-audio-player');
-    audioPlayer.src = `https://pub-3593d5d19c3f4660a2c22108b3c7512c.r2.dev/${filename}`;
-    audioPlayer.load();
+    audioPlayer.src = `https://pub-3593d5d19c3f4660a2c22108b3c7512c.r2.dev/${filename}`;    audioPlayer.load();
     audioPlayer.play().catch(e => console.error("Erreur lecture audio:", e));
 
     document.getElementById('now-playing-title').textContent = titre;
@@ -266,9 +262,29 @@ function lancerAudio(filename, titre, artiste) {
     document.getElementById('play-pause-btn').textContent = '⏸️';
 
     currentAudioPlayer = 'audio';
+    currentMediaType = 'audio';
     isPlaying = true;
     updateMediaSession(titre);
     requestWakeLock();
+}
+
+// ==========================================
+// FIN DE LECTURE (BOUCLE / SUIVANT)
+// ==========================================
+function handleMediaEnded() {
+    if (loopMode === 2) {
+        // Rejouer la même piste
+        lancerMedia(currentQueueIndex);
+    } else if (loopMode === 1 || currentQueueIndex < currentQueue.length - 1) {
+        // Passer à la suivante
+        playNext();
+    }
+}
+
+function onPlayerStateChange(event) {
+    if (event.data === YT.PlayerState.ENDED) {
+        handleMediaEnded();
+    }
 }
 
 // ==========================================
@@ -300,7 +316,6 @@ function togglePlay() {
         }
     }
 
-    // Synchroniser le bouton du lecteur plein écran
     const fsBtn = document.getElementById('fs-play-pause-btn');
     const mainBtn = document.getElementById('play-pause-btn');
     if (fsBtn && mainBtn) {
@@ -312,26 +327,21 @@ function togglePlay() {
 // SUIVANT / PRÉCÉDENT
 // ==========================================
 function playNext() {
-    if (currentAudioPlayer === 'audio') return;
-    if (currentPlaylistVideos.length === 0) return;
+    if (currentQueue.length === 0) return;
 
     if (isShuffleOn) {
-        // Lecture aléatoire
-        currentVideoIndex = Math.floor(Math.random() * currentPlaylistVideos.length);
+        currentQueueIndex = Math.floor(Math.random() * currentQueue.length);
     } else {
-        currentVideoIndex = (currentVideoIndex + 1) % currentPlaylistVideos.length;
+        currentQueueIndex = (currentQueueIndex + 1) % currentQueue.length;
     }
 
-    const video = currentPlaylistVideos[currentVideoIndex];
-    lancerVideo(video.youtubeId, video.titre);
+    lancerMedia(currentQueueIndex);
 }
 
 function playPrevious() {
-    if (currentAudioPlayer === 'audio') return;
-    if (currentPlaylistVideos.length === 0) return;
-    currentVideoIndex = (currentVideoIndex - 1 + currentPlaylistVideos.length) % currentPlaylistVideos.length;
-    const video = currentPlaylistVideos[currentVideoIndex];
-    lancerVideo(video.youtubeId, video.titre);
+    if (currentQueue.length === 0) return;
+    currentQueueIndex = (currentQueueIndex - 1 + currentQueue.length) % currentQueue.length;
+    lancerMedia(currentQueueIndex);
 }
 
 // ==========================================
@@ -422,14 +432,13 @@ function updateFsTrackList() {
     const list = document.getElementById('fs-track-list');
     list.innerHTML = '';
 
-    if (currentAudioPlayer === 'youtube' && currentPlaylistVideos.length > 0) {
-        currentPlaylistVideos.forEach((video, index) => {
+    if (currentQueue.length > 0) {
+        currentQueue.forEach((item, index) => {
             const li = document.createElement('li');
-            li.textContent = video.titre;
-            if (index === currentVideoIndex) li.classList.add('playing');
+            li.textContent = item.titre;
+            if (index === currentQueueIndex) li.classList.add('playing');
             li.onclick = () => {
-                currentVideoIndex = index;
-                lancerVideo(video.youtubeId, video.titre);
+                lancerMedia(index);
                 closeFullscreenPlayer();
             };
             list.appendChild(li);
@@ -494,6 +503,7 @@ function isUserAdmin() {
         return false;
     }
 }
+
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
