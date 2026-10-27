@@ -18,10 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
     chargerPlaylistsSelect();
     chargerPlaylistsSelectManage();
     chargerPlaylistsSelectUpload();
+    chargerPlaylistsSelectManageAudios();
     chargerUtilisateurs();
+    chargerPlaylistsAdmin();
 });
 
-// --- 1. GESTION DES PLAYLISTS ---
+// ==========================================
+// 1. GESTION DES PLAYLISTS
+// ==========================================
 async function creerPlaylist() {
     const titre = document.getElementById('new-playlist-title').value;
     const desc = document.getElementById('new-playlist-desc').value;
@@ -41,13 +45,71 @@ async function creerPlaylist() {
             chargerPlaylistsSelect();
             chargerPlaylistsSelectManage();
             chargerPlaylistsSelectUpload();
+            chargerPlaylistsSelectManageAudios();
+            chargerPlaylistsAdmin();
         } else {
             alert('Erreur lors de la création');
         }
     } catch (e) { console.error(e); }
 }
 
-// --- 2. GESTION DES VIDÉOS YOUTUBE ---
+async function chargerPlaylistsAdmin() {
+    const container = document.getElementById('playlists-admin-list');
+    container.innerHTML = '<p>Chargement...</p>';
+
+    try {
+        const response = await fetch('/api/playlists', { headers: { 'Authorization': `Bearer ${token}` } });
+        const playlists = await response.json();
+
+        container.innerHTML = '';
+        if (playlists.length === 0) {
+            container.innerHTML = '<p>Aucune playlist.</p>';
+            return;
+        }
+
+        playlists.forEach(p => {
+            const div = document.createElement('div');
+            div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #444;';
+            div.innerHTML = `
+                <span><strong>${p.titre}</strong> (ID: ${p.id})</span>
+                <button onclick="supprimerPlaylist(${p.id})" style="background: #ff4444; width: auto; padding: 5px 10px; font-size: 12px; margin: 0;">🗑️ Supprimer</button>
+            `;
+            container.appendChild(div);
+        });
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p style="color: #ff6b6b;">Erreur de chargement.</p>';
+    }
+}
+
+async function supprimerPlaylist(id) {
+    if (!confirm('Voulez-vous vraiment supprimer cette playlist ? Toutes les vidéos et audios associés seront aussi supprimés.')) return;
+
+    try {
+        const response = await fetch(`/api/playlists/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            alert('Playlist supprimée !');
+            chargerPlaylistsAdmin();
+            chargerPlaylistsSelect();
+            chargerPlaylistsSelectManage();
+            chargerPlaylistsSelectUpload();
+            chargerPlaylistsSelectManageAudios();
+        } else {
+            alert('Erreur lors de la suppression.');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Erreur réseau.');
+    }
+}
+
+// ==========================================
+// 2. VIDÉOS YOUTUBE (Ajout / Import)
+// ==========================================
 async function chargerPlaylistsSelect() {
     try {
         const response = await fetch('/api/playlists', { headers: { 'Authorization': `Bearer ${token}` } });
@@ -76,24 +138,38 @@ async function ajouterVideo() {
             document.getElementById('new-video-title').value = '';
             document.getElementById('new-video-youtube-id').value = '';
         } else {
-            alert('Erreur lors de l\'ajout');
+            const error = await response.text();
+            alert('Erreur : ' + error);
         }
     } catch (e) { console.error(e); }
 }
 
-// --- 3. UPLOAD AUDIO MULTIPLE ---
+// ==========================================
+// 3. AUDIOS (Upload / Gestion)
+// ==========================================
 async function chargerPlaylistsSelectUpload() {
     try {
         const response = await fetch('/api/playlists', { headers: { 'Authorization': `Bearer ${token}` } });
         const playlists = await response.json();
-        const select = document.getElementById('audio-playlist-select');
+        const select = document.getElementById('upload-audio-playlist-select');
         select.innerHTML = '<option value="">Sélectionnez une playlist</option>';
         playlists.forEach(p => select.innerHTML += `<option value="${p.id}">${p.titre}</option>`);
     } catch (e) { console.error(e); }
 }
+
+async function chargerPlaylistsSelectManageAudios() {
+    try {
+        const response = await fetch('/api/playlists', { headers: { 'Authorization': `Bearer ${token}` } });
+        const playlists = await response.json();
+        const select = document.getElementById('manage-audio-playlist-select');
+        select.innerHTML = '<option value="">Sélectionnez une playlist</option>';
+        playlists.forEach(p => select.innerHTML += `<option value="${p.id}">${p.titre}</option>`);
+    } catch (e) { console.error(e); }
+}
+
 async function uploadAudio() {
-    const playlistId = document.getElementById('audio-playlist-select').value;
-    const titre = document.getElementById('audio-title').value; // Peut être vide
+    const playlistId = document.getElementById('upload-audio-playlist-select').value;
+    const titre = document.getElementById('audio-title').value;
     const artiste = document.getElementById('audio-artist').value;
     const fileInput = document.getElementById('audio-file');
 
@@ -106,11 +182,7 @@ async function uploadAudio() {
     for (let i = 0; i < fileInput.files.length; i++) {
         formData.append('files', fileInput.files[i]);
     }
-
-    // On ajoute le titre seulement s'il est rempli
-    if (titre.trim() !== '') {
-        formData.append('titre', titre);
-    }
+    if (titre.trim() !== '') formData.append('titre', titre);
     formData.append('artiste', artiste);
     formData.append('playlistId', playlistId);
 
@@ -129,14 +201,66 @@ async function uploadAudio() {
         document.getElementById('audio-title').value = '';
         document.getElementById('audio-artist').value = '';
         document.getElementById('audio-file').value = '';
-
+        chargerAudiosAdmin();
     } catch (error) {
         console.error(error);
         alert('Erreur lors de l\'upload.');
     }
 }
 
-// --- 4. GESTION DES VIDÉOS EXISTANTES ---
+async function chargerAudiosAdmin() {
+    const playlistId = document.getElementById('manage-audio-playlist-select').value;
+    const container = document.getElementById('admin-audio-list');
+    if (!playlistId) { container.innerHTML = ''; return; }
+
+    try {
+        const response = await fetch(`/api/audios/playlists/${playlistId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const audios = await response.json();
+
+        container.innerHTML = '';
+        if (audios.length === 0) {
+            container.innerHTML = '<p>Aucun audio dans cette playlist.</p>';
+            return;
+        }
+
+        audios.forEach(a => {
+            const div = document.createElement('div');
+            div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #444;';
+            div.innerHTML = `
+                <span><strong>${a.titre}</strong> - ${a.artiste || 'Artiste inconnu'}</span>
+                <button onclick="supprimerAudio(${a.id})" style="background: #ff4444; width: auto; padding: 5px 10px; font-size: 12px; margin: 0;">🗑️</button>
+            `;
+            container.appendChild(div);
+        });
+    } catch (e) { console.error(e); }
+}
+
+async function supprimerAudio(id) {
+    if (!confirm('Voulez-vous vraiment supprimer cet audio ?')) return;
+
+    try {
+        const response = await fetch(`/api/audios/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            alert('Audio supprimé !');
+            chargerAudiosAdmin();
+        } else {
+            alert('Erreur lors de la suppression.');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Erreur réseau.');
+    }
+}
+
+// ==========================================
+// 4. GESTION DES VIDÉOS EXISTANTES
+// ==========================================
 async function chargerPlaylistsSelectManage() {
     try {
         const response = await fetch('/api/playlists', { headers: { 'Authorization': `Bearer ${token}` } });
@@ -188,7 +312,9 @@ async function supprimerVideo(videoId) {
     } catch (e) { console.error(e); }
 }
 
-// --- 5. GESTION DES UTILISATEURS ---
+// ==========================================
+// 5. GESTION DES UTILISATEURS
+// ==========================================
 async function chargerUtilisateurs() {
     const container = document.getElementById('users-list');
     container.innerHTML = '<p>Chargement...</p>';
@@ -241,8 +367,10 @@ async function supprimerUtilisateur(id) {
     } catch (e) { console.error(e); }
 }
 
-// --- 6. IMPORT YOUTUBE ---
-const YOUTUBE_API_KEY = 'AIzaSyAJ8V0dRSDoAq9RlO5hjj6UeK7T1pS7aEE'; // Ta clé
+// ==========================================
+// 6. IMPORT YOUTUBE
+// ==========================================
+const YOUTUBE_API_KEY = 'AIzaSyAJ8V0dRSDoAq9RlO5hjj6UeK7T1pS7aEE';
 
 async function importerPlaylistYouTube() {
     const url = prompt("Collez l'URL de la playlist YouTube (ex: https://www.youtube.com/playlist?list=PL...):");
@@ -299,7 +427,9 @@ async function confirmerImportation() {
     chargerVideosAdmin();
 }
 
-// --- DÉCONNEXION ---
+// ==========================================
+// 7. DÉCONNEXION
+// ==========================================
 function logout() {
     localStorage.clear();
     window.location.href = '/login.html';

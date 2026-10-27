@@ -3,6 +3,7 @@ package com.swab.tawhid.controllers;
 import com.swab.tawhid.entites.Audio;
 import com.swab.tawhid.services.AudioService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,5 +19,12 @@ public class AudioController {
     @GetMapping("/playlists/{playlistId}")
     public List<Audio> getAudiosByPlaylist(@PathVariable Long playlistId) {
         return audioService.getAudiosByPlaylist(playlistId);
+    }
+
+    // DELETE /api/audios/{id} -> Supprimer un audio
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAudio(@PathVariable Long id) {
+        audioService.deleteAudio(id);
+        return ResponseEntity.noContent().build();
     }
 }

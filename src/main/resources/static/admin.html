@@ -25,6 +25,13 @@
             <button onclick="creerPlaylist()">Créer la playlist</button>
         </section>
 
+        <!-- Section de gestion des playlists existantes -->
+        <section class="admin-section">
+            <h2>📁 Gérer les playlists existantes</h2>
+            <button onclick="chargerPlaylistsAdmin()" style="margin-bottom: 15px;">Rafraîchir la liste</button>
+            <div id="playlists-admin-list" style="margin-top: 15px;"></div>
+        </section>
+
         <!-- Section 2 : Vidéos YouTube -->
         <section class="admin-section">
             <h2>🎬 Vidéos YouTube</h2>
@@ -50,7 +57,7 @@
             <h2>🎧 Mes Audios (MP3)</h2>
             <p style="color: #888; font-size: 14px; margin-bottom: 15px;">Uploadez un ou plusieurs fichiers MP3 en une seule fois.</p>
 
-            <select id="audio-playlist-select">
+            <select id="upload-audio-playlist-select">
                 <option value="">Sélectionnez une playlist</option>
             </select>
 
@@ -58,6 +65,15 @@
             <input type="text" id="audio-artist" placeholder="Artiste (optionnel)">
             <input type="file" id="audio-file" accept="audio/*" multiple>
             <button onclick="uploadAudio()">Uploader le(s) audio(s)</button>
+        </section>
+
+        <!-- Section de gestion des audios existants -->
+        <section class="admin-section">
+            <h2>🎧 Gérer les audios existants</h2>
+            <select id="manage-audio-playlist-select" onchange="chargerAudiosAdmin()">
+                <option value="">Sélectionnez une playlist</option>
+            </select>
+            <div id="admin-audio-list" style="margin-top: 15px;"></div>
         </section>
 
         <!-- Section 4 : Gestion des vidéos existantes -->
@@ -75,6 +91,7 @@
             <button onclick="chargerUtilisateurs()" style="margin-bottom: 15px;">Rafraîchir la liste</button>
             <div id="users-list" style="margin-top: 15px;"></div>
         </section>
+
     </main>
 </div>
 
