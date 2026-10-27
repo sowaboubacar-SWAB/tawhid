@@ -1,5 +1,6 @@
 package com.swab.tawhid.services;
 
+import software.amazon.awssdk.services.s3.S3Configuration;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -23,11 +24,18 @@ public class R2Service {
     private final String bucketName = "tawhid-audio";
 
     private S3Client getClient() {
+        // Configuration spécifique pour R2 : désactiver le chunked encoding
+        S3Configuration serviceConfiguration = S3Configuration.builder()
+                .pathStyleAccessEnabled(true)
+                .chunkedEncodingEnabled(false) // <-- C'est la ligne cruciale
+                .build();
+
         return S3Client.builder()
                 .endpointOverride(URI.create(endpoint))
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(accessKey, secretKey)))
-                .region(Region.of("auto")) // R2 utilise "auto"
+                .region(Region.of("auto"))
+                .serviceConfiguration(serviceConfiguration) // <-- On ajoute la config
                 .build();
     }
 
