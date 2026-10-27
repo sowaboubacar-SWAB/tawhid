@@ -330,3 +330,121 @@ button:hover { background: #1aa34a; }
     .track-list li { flex-direction: column; align-items: flex-start; gap: 5px; }
     .track-list audio { width: 100% !important; margin-top: 5px; }
 }
+
+/* --- STYLE POUR LES LISTES DE L'ADMIN --- */
+.admin-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: #181818;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: background 0.2s;
+}
+.admin-list-item:hover {
+    background: #282828;
+}
+
+.admin-list-item label {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    flex: 1;
+    color: #fff;
+}
+
+/* Style des cases à cocher (Checkbox) */
+.admin-list-item input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #555;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    margin: 0;
+}
+
+.admin-list-item input[type="checkbox"]:checked {
+    background: #1DB954;
+    border-color: #1DB954;
+}
+
+.admin-list-item input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #000;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Petit bouton de suppression (icône) */
+.btn-icon-delete {
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 5px;
+    width: auto;
+    margin: 0;
+    transition: color 0.2s, transform 0.2s;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-icon-delete:hover {
+    color: #ff4444;
+    background: rgba(255, 68, 68, 0.1);
+    transform: scale(1.1);
+}
+
+/* Barre d'outils (Tout sélectionner + Supprimer) */
+.admin-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    background: #222;
+    border-radius: 8px;
+}
+.admin-toolbar label {
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+.admin-toolbar input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #1DB954;
+    margin: 0;
+}
+.btn-delete-selection {
+    background: rgba(255, 68, 68, 0.1);
+    color: #ff4444;
+    border: 1px solid #ff4444;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    width: auto;
+    margin: 0;
+    transition: all 0.2s;
+}
+.btn-delete-selection:hover {
+    background: #ff4444;
+    color: #fff;
+}

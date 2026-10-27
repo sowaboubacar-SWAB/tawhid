@@ -69,10 +69,10 @@ async function chargerPlaylistsAdmin() {
 
         playlists.forEach(p => {
             const div = document.createElement('div');
-            div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #444;';
+            div.className = 'admin-list-item';
             div.innerHTML = `
-                <span><strong>${p.titre}</strong> (ID: ${p.id})</span>
-                <button onclick="supprimerPlaylist(${p.id})" style="background: #ff4444; width: auto; padding: 5px 10px; font-size: 12px; margin: 0;">🗑️ Supprimer</button>
+                <span><strong>${p.titre}</strong> <small style="color: #888;">(ID: ${p.id})</small></span>
+                <button class="btn-icon-delete" onclick="supprimerPlaylist(${p.id})" title="Supprimer">🗑️</button>
             `;
             container.appendChild(div);
         });
@@ -225,23 +225,27 @@ async function chargerAudiosAdmin() {
             return;
         }
 
+        // Barre d'outils
         const toolbar = document.createElement('div');
-        toolbar.style.marginBottom = '10px';
+        toolbar.className = 'admin-toolbar';
         toolbar.innerHTML = `
-            <label style="cursor: pointer; color: #fff; margin-right: 15px;">
+            <label>
                 <input type="checkbox" id="select-all-audios" onchange="toggleSelectAll('audios')"> Tout sélectionner
             </label>
-            <button onclick="supprimerSelection('audios')" style="background: #ff4444; width: auto; padding: 5px 10px; font-size: 12px;">🗑️ Supprimer la sélection</button>
+            <button class="btn-delete-selection" onclick="supprimerSelection('audios')">🗑️ Supprimer la sélection</button>
         `;
         container.appendChild(toolbar);
 
+        // Liste des audios
         audios.forEach(a => {
             const div = document.createElement('div');
-            div.style.cssText = 'display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #444; gap: 10px;';
+            div.className = 'admin-list-item';
             div.innerHTML = `
-                <input type="checkbox" class="audio-checkbox" value="${a.id}" style="width: auto;">
-                <span style="flex: 1;">${a.titre} - ${a.artiste || 'Artiste inconnu'}</span>
-                <button onclick="supprimerAudio(${a.id})" style="background: #ff4444; width: auto; padding: 5px 10px; font-size: 12px; margin: 0;">🗑️</button>
+                <label>
+                    <input type="checkbox" class="audios-checkbox" value="${a.id}">
+                    <span><strong>${a.titre}</strong> <small style="color: #888;">- ${a.artiste || 'Artiste inconnu'}</small></span>
+                </label>
+                <button class="btn-icon-delete" onclick="supprimerAudio(${a.id})" title="Supprimer">🗑️</button>
             `;
             container.appendChild(div);
         });
@@ -297,23 +301,27 @@ async function chargerVideosAdmin() {
             return;
         }
 
+        // Barre d'outils
         const toolbar = document.createElement('div');
-        toolbar.style.marginBottom = '10px';
+        toolbar.className = 'admin-toolbar';
         toolbar.innerHTML = `
-            <label style="cursor: pointer; color: #fff; margin-right: 15px;">
+            <label>
                 <input type="checkbox" id="select-all-videos" onchange="toggleSelectAll('videos')"> Tout sélectionner
             </label>
-            <button onclick="supprimerSelection('videos')" style="background: #ff4444; width: auto; padding: 5px 10px; font-size: 12px;">🗑️ Supprimer la sélection</button>
+            <button class="btn-delete-selection" onclick="supprimerSelection('videos')">🗑️ Supprimer la sélection</button>
         `;
         container.appendChild(toolbar);
 
+        // Liste des vidéos
         videos.forEach(video => {
             const div = document.createElement('div');
-            div.style.cssText = 'display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #444; gap: 10px;';
+            div.className = 'admin-list-item';
             div.innerHTML = `
-                <input type="checkbox" class="video-checkbox" value="${video.id}" style="width: auto;">
-                <span style="flex: 1;">${video.titre} (${video.youtubeId})</span>
-                <button onclick="supprimerVideo(${video.id})" style="background: #ff4444; width: auto; padding: 5px 10px; font-size: 12px; margin: 0;">🗑️</button>
+                <label>
+                    <input type="checkbox" class="videos-checkbox" value="${video.id}">
+                    <span>${video.titre} <small style="color: #888;">(${video.youtubeId})</small></span>
+                </label>
+                <button class="btn-icon-delete" onclick="supprimerVideo(${video.id})" title="Supprimer">🗑️</button>
             `;
             container.appendChild(div);
         });
@@ -364,7 +372,7 @@ async function chargerUtilisateurs() {
                         <td style="padding: 8px;">${u.id}</td>
                         <td style="padding: 8px;">${u.username}</td>
                         <td style="padding: 8px;">${u.role === 'ROLE_ADMIN' ? '👑 Admin' : '👤 User'}</td>
-                        <td style="padding: 8px;"><button onclick="supprimerUtilisateur(${u.id})" style="background: #ff4444; width: auto; padding: 5px 10px; font-size: 12px;">🗑️</button></td>
+                        <td style="padding: 8px;"><button class="btn-icon-delete" onclick="supprimerUtilisateur(${u.id})" title="Supprimer">🗑️</button></td>
                     </tr>
                 `).join('')}
             </tbody>
