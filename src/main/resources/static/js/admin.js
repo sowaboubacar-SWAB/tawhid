@@ -178,36 +178,60 @@ async function uploadAudio() {
         return;
     }
 
-    const formData = new FormData();
-    for (let i = 0; i < fileInput.files.length; i++) {
-        formData.append('files', fileInput.files[i]);
-    }
-    if (titre.trim() !== '') formData.append('titre', titre);
-    formData.append('artiste', artiste);
-    formData.append('playlistId', playlistId);
+    const files = fileInput.files;
+    const filenames = Array.from(files).map(f => f.name);
 
     try {
-        const response = await fetch('/api/files/upload', {
+        // 1. Demander les URL présignées à notre serveur Render (très léger)
+        const presignResponse = await fetch('/api/files/presign', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: formData
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(filenames)
         });
 
-        if (!response.ok) throw new Error('Erreur lors de l\'upload');
+        if (!presignResponse.ok) throw new Error('Erreur de génération des URLs');
+        const urlPairs = await presignResponse.json(); // Liste de "URL|NOM_FICHIER"
 
-        const message = await response.text();
-        alert(message);
+        const confirmations = [];
 
-        document.getElementById('audio-title').value = '';
-        document.getElementById('audio-artist').value = '';
-        document.getElementById('audio-file').value = '';
+        // 2. Envoyer chaque fichier DIRECTEMENT à Cloudflare
+        for (let i = 0; i < files.length; i++) {
+            const [presignedUrl, finalFilename] = urlPairs[i].split('|');
+
+            // Envoi direct (le fichier ne passe PAS par Render)
+            const uploadResponse = await fetch(presignedUrl, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'audio/mpeg' },
+                body: files[i]
+            });
+
+            if (!uploadResponse.ok) throw new Error(`Erreur upload Cloudflare pour ${files[i].name}`);
+
+            // Préparer les infos pour la confirmation
+            const titreFichier = files[i].name.substring(0, files[i].name.lastIndexOf('.')).replace(/_/g, ' ');
+            confirmations.push({
+                playlistId: playlistId,
+                titre: (titre.trim() !== '' && files.length === 1) ? titre : titreFichier,
+                artiste: artiste,
+                filename: finalFilename
+            });
+        }
+
+        // 3. Confirmer à notre serveur (pour enregistrer en base)
+        await fetch('/api/files/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(confirmations)
+        });
+
+        alert(`${files.length} fichier(s) uploadé(s) avec succès !`);
         chargerAudiosAdmin();
+
     } catch (error) {
         console.error(error);
-        alert('Erreur lors de l\'upload.');
+        alert('Erreur lors de l\'upload direct.');
     }
 }
-
 async function chargerAudiosAdmin() {
     const playlistId = document.getElementById('manage-audio-playlist-select').value;
     const container = document.getElementById('admin-audio-list');
