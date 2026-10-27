@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -16,40 +17,51 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final JwtAuthenticationFilter  jwtAuthFilter; // On inject notre filtre
 
-    // On l'indique Bcrypt
+    private final JwtAuthenticationFilter jwtAuthFilter;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    //Config le videur
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Routes publiques
+
+                        // 1. ROUTES PUBLIQUES (Auth, Swagger, Fichiers statiques)
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/", "/index.html","/register.html", "/login.html", "/admin.html", "/css/**", "/js/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/", "/index.html", "/register.html", "/login.html", "/admin.html", "/css/**", "/js/**", "/favicon.ico").permitAll()
                         .requestMatchers("/error").permitAll()
 
-                        // Lecture : tout le monde peut voir les playlists et vidéos et audios
+                        // 2. LECTURE PUBLIQUE (Playlists, Vidéos, Audios)
                         .requestMatchers(HttpMethod.GET, "/api/playlists/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/videos/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/audios/**").permitAll()
+
+                        // 3. FICHIERS STATIQUES (Écoute des MP3)
                         .requestMatchers(HttpMethod.GET, "/api/files/**").permitAll()
-                        .requestMatchers("/api/user/**").permitAll()
-                        // Écriture (POST, DELETE) : Réservé aux ADMIN
+
+                        // 4. UPLOAD DE FICHIERS (Réservé aux ADMIN)
+                        // Cette ligne doit être AVANT la règle générale POST
+                        .requestMatchers(HttpMethod.POST, "/api/files/**").hasRole("ADMIN")
+
+                        // 5. GESTION DES UTILISATEURS (Réservé aux ADMIN)
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+
+                        // 6. ÉCRITURE GÉNÉRALE (POST, DELETE réservé aux ADMIN)
                         .requestMatchers(HttpMethod.POST, "/api/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
 
-                        // Tout le reste nécessite une authentification
+                        // 7. TOUT LE RESTE NÉCESSITE UNE AUTHENTIFICATION
                         .anyRequest().authenticated()
-
                 )
-        // On ajoute notre filtre avant le filtre par défaut de Spring
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }
