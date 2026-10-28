@@ -21,7 +21,7 @@ public class R2PresignService {
     private final String accessKey = "3e2e68871069251492ccf0fca63e611f";
     private final String secretKey = "7b034e1772dbf0b4fece9133465d42ce91a5eee72c760bf7fd055efcc749681e";
 
-    private final String endpoint = "https://TON_ACCOUNT_ID.r2.cloudflarestorage.com";
+    private final String endpoint = "https://a11174c86e568fcf5aa167f187ca1fcc.r2.cloudflarestorage.com";
     private final String bucketName = "tawhid-audio";
 
     public String generateUploadUrl(String originalFilename) {
