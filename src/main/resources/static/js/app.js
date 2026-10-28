@@ -10,6 +10,7 @@ let currentToken = localStorage.getItem('token');
 let currentAudioPlayer = null; // 'youtube' ou 'audio'
 let currentMediaType = null; // 'video' ou 'audio' pour l'élément en cours
 let wakeLock = null;
+let pendingVideo = null; // Vidéo en attente si le lecteur YouTube n'est pas prêt
 
 // Variables pour le lecteur plein écran
 let isShuffleOn = false;
@@ -231,18 +232,21 @@ function lancerVideo(videoId, titre) {
     currentAudioPlayer = 'youtube';
     currentMediaType = 'video';
 
+    document.getElementById('now-playing-title').textContent = titre;
+    document.getElementById('now-playing-artist').textContent = 'YouTube';
+    document.getElementById('progress-bar').value = 0;
+    document.getElementById('current-time').textContent = '0:00';
+    isPlaying = true;
+    document.getElementById('play-pause-btn').textContent = '⏸️';
+
     if (ytPlayer && ytPlayer.loadVideoById) {
         ytPlayer.loadVideoById(videoId);
-        document.getElementById('now-playing-title').textContent = titre;
-        document.getElementById('now-playing-artist').textContent = 'YouTube';
-        document.getElementById('progress-bar').value = 0;
-        document.getElementById('current-time').textContent = '0:00';
-        isPlaying = true;
-        document.getElementById('play-pause-btn').textContent = '⏸️';
         updateMediaSession(titre);
         requestWakeLock();
     } else {
-        setTimeout(() => lancerVideo(videoId, titre), 1000);
+        // Si le lecteur n'est pas prêt, on met la vidéo en attente
+        console.log("Lecteur YouTube pas prêt, mise en attente...");
+        pendingVideo = { videoId, titre };
     }
 }
 
@@ -252,7 +256,8 @@ function lancerAudio(filename, titre, artiste) {
     }
 
     const audioPlayer = document.getElementById('html-audio-player');
-    audioPlayer.src = `https://pub-3593d5d19c3f4660a2c22108b3c7512c.r2.dev/${filename}`;    audioPlayer.load();
+    audioPlayer.src = `https://pub-3593d5d19c3f4660a2c22108b3c7512c.r2.dev/${filename}`;
+    audioPlayer.load();
     audioPlayer.play().catch(e => console.error("Erreur lecture audio:", e));
 
     document.getElementById('now-playing-title').textContent = titre;
@@ -266,6 +271,40 @@ function lancerAudio(filename, titre, artiste) {
     isPlaying = true;
     updateMediaSession(titre);
     requestWakeLock();
+}
+
+// ==========================================
+// LECTEUR YOUTUBE
+// ==========================================
+function onYouTubeIframeAPIReady() {
+    ytPlayer = new YT.Player('youtube-player', {
+        height: '200',
+        width: '200',
+        videoId: '',
+        playerVars: {
+            'autoplay': 0,
+            'controls': 1,
+            'disablekb': 1,
+            'fs': 0,
+            'modestbranding': 1,
+            'origin': window.location.origin // <-- Crucial pour Render
+        },
+        events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+        }
+    });
+}
+
+function onPlayerReady(event) {
+    console.log("✅ Lecteur YouTube prêt !");
+    // Si une vidéo était en attente, on la lance maintenant
+    if (pendingVideo) {
+        event.target.loadVideoById(pendingVideo.videoId);
+        updateMediaSession(pendingVideo.titre);
+        requestWakeLock();
+        pendingVideo = null;
+    }
 }
 
 // ==========================================
