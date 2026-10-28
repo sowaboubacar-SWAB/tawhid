@@ -166,10 +166,12 @@ async function chargerPlaylistDetails(playlistId, playlistTitle, playlistDesc) {
             });
         });
 
-        // 4. Afficher les vidéos dans la section vidéo
+        // 4. Afficher les vidéos dans la section vidéo (CACHER SI VIDE)
+        const videosSection = document.getElementById('videos-section');
         if (videos.length === 0) {
-            videoList.innerHTML = '<li style="color: #888;">Aucune vidéo dans cette playlist.</li>';
+            videosSection.style.display = 'none';
         } else {
+            videosSection.style.display = 'block';
             videos.forEach(video => {
                 const li = document.createElement('li');
                 li.textContent = `${video.titre}`;
@@ -181,11 +183,12 @@ async function chargerPlaylistDetails(playlistId, playlistTitle, playlistDesc) {
             });
         }
 
-        // 5. Afficher les audios dans la section audio
+        // 5. Afficher les audios dans la section audio (CACHER SI VIDE)
+        const audiosSection = document.getElementById('audios-section');
         if (audios.length === 0) {
-            document.getElementById('audios-section').style.display = 'none';
+            audiosSection.style.display = 'none';
         } else {
-            document.getElementById('audios-section').style.display = 'block';
+            audiosSection.style.display = 'block';
             audios.forEach(audio => {
                 const li = document.createElement('li');
                 li.innerHTML = `
@@ -241,10 +244,12 @@ function lancerVideo(videoId, titre) {
 
     if (ytPlayer && ytPlayer.loadVideoById) {
         ytPlayer.loadVideoById(videoId);
+        ytPlayer.unMute();
+        ytPlayer.setVolume(100);
+        ytPlayer.playVideo();
         updateMediaSession(titre);
         requestWakeLock();
     } else {
-        // Si le lecteur n'est pas prêt, on met la vidéo en attente
         console.log("Lecteur YouTube pas prêt, mise en attente...");
         pendingVideo = { videoId, titre };
     }
@@ -298,9 +303,13 @@ function onYouTubeIframeAPIReady() {
 
 function onPlayerReady(event) {
     console.log("✅ Lecteur YouTube prêt !");
+    event.target.unMute();
+    event.target.setVolume(100);
+
     // Si une vidéo était en attente, on la lance maintenant
     if (pendingVideo) {
         event.target.loadVideoById(pendingVideo.videoId);
+        event.target.playVideo();
         updateMediaSession(pendingVideo.titre);
         requestWakeLock();
         pendingVideo = null;
