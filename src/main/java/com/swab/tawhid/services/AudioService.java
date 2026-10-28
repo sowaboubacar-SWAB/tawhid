@@ -17,14 +17,16 @@ public class AudioService {
     private final PlaylistRepository playlistRepository;
 
     public Audio addAudioToPlaylist(Long playlistId, Audio audio) {
-        // Vérification des doublons
+        // 1. Vérifier si un audio avec le même titre existe déjà dans cette playlist
         if (audioRepository.existsByTitreAndPlaylistId(audio.getTitre(), playlistId)) {
             throw new RuntimeException("Un audio avec ce titre existe déjà dans cette playlist.");
         }
 
+        // 2. Récupérer la playlist
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() -> new RuntimeException("Playlist introuvable"));
 
+        // 3. Lier et sauvegarder
         audio.setPlaylist(playlist);
         return audioRepository.save(audio);
     }
@@ -33,7 +35,9 @@ public class AudioService {
         return audioRepository.findByPlaylist_Id(playlistId);
     }
 
+    // Méthode de suppression avec vérification
     public void deleteAudio(Long id) {
+        // Vérifie si l'audio existe, sinon lève une exception (gérée par GlobalExceptionHandler)
         if (!audioRepository.existsById(id)) {
             throw new RuntimeException("Audio introuvable avec l'id : " + id);
         }

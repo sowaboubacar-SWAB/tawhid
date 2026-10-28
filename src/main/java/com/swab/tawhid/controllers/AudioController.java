@@ -21,7 +21,7 @@ public class AudioController {
         return audioService.getAudiosByPlaylist(playlistId);
     }
 
-    // DELETE /api/audios/{id} -> Supprimer un audio
+    // DELETE /api/audios/{id} -> Supprimer un audio (vérifie s'il existe dans le service)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAudio(@PathVariable Long id) {
         audioService.deleteAudio(id);
